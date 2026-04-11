@@ -1,0 +1,50 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+*.log
+
+# ===========================================
+# data/fred/ — mixed authoritative + derivation
+# ===========================================
+# Keep (small reference / helpful for reviewers):
+#   data/fred/endpoints.json
+#   data/fred/taxonomy/*.json
+#   data/fred/parquet/{categories,releases,sources,tags}.parquet  (small)
+#   data/fred/series-top-5000.json
+#
+# Exclude (large or derivable):
+
+# The source-of-truth per-series JSON files — 12 GB / 840K files
+data/fred/series/
+
+# Raw API response caches (derivable, deleted during disk cleanup)
+data/fred/raw/
+data/fred/raw-bulk/
+data/fred/release-series-raw/
+data/fred/_old/
+
+# In-flight resumable state for link walks (tens of MB)
+data/fred/_interim/
+
+# CSV exports (multi-GB, derivable from series/)
+data/fred/export/
+
+# DuckDB database + write-ahead log (3.5 GB)
+data/fred/fred.duckdb
+data/fred/fred.duckdb.wal
+
+# Large parquet tables (>1 MB) — keep only small reference tables
+data/fred/parquet/observations.parquet
+data/fred/parquet/series.parquet
+
+# Inverse indexes (derivable, ~35 MB combined)
+data/fred/category-to-series.json
+data/fred/tag-to-series.json
+
+# Resume / progress state
+data/fred/series-index.json
+data/fred/series-index-progress.json
+data/fred/obs-progress-*.json
+data/fred/series-progress-*.json
+data/fred/taxonomy/*.tmp.json

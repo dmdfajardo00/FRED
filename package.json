@@ -1,0 +1,17 @@
+{
+  "name": "fred",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "FRED (Federal Reserve Economic Data) API scraper — taxonomy and bulk data extraction",
+  "scripts": {
+    "taxonomy:sources": "node --env-file=.env scripts/fetch-sources.js",
+    "taxonomy:releases": "node --env-file=.env scripts/fetch-releases.js",
+    "taxonomy:tags": "node --env-file=.env scripts/fetch-tags.js",
+    "taxonomy:categories": "node --env-file=.env scripts/fetch-categories.js",
+    "taxonomy:all": "npm run taxonomy:sources && npm run taxonomy:releases && npm run taxonomy:tags && npm run taxonomy:categories"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
