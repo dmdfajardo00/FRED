@@ -1,0 +1,336 @@
+{
+  "base_url": "https://api.stlouisfed.org",
+  "docs_url": "https://fred.stlouisfed.org/docs/api/fred/",
+  "auth": {
+    "method": "query_param",
+    "param": "api_key",
+    "format": "32-char lowercase alphanumeric"
+  },
+  "formats": ["json", "xml", "xlsx", "csv"],
+  "rate_limit": {
+    "requests_per_minute": 120,
+    "notes": "No official daily cap documented"
+  },
+  "common_params": {
+    "api_key": "Required — your API key",
+    "file_type": "json | xml (default: xml)",
+    "realtime_start": "YYYY-MM-DD — ALFRED point-in-time start (default: today)",
+    "realtime_end": "YYYY-MM-DD — ALFRED point-in-time end (default: today)",
+    "limit": "Max results per page (varies by endpoint)",
+    "offset": "Pagination offset",
+    "order_by": "Sort attribute (varies by endpoint)",
+    "sort_order": "asc | desc"
+  },
+  "tag_groups": {
+    "freq": "Frequency",
+    "gen": "General / Concept",
+    "geo": "Geography",
+    "geot": "Geography Type",
+    "rls": "Release",
+    "seas": "Seasonal Adjustment",
+    "src": "Source"
+  },
+  "groups": {
+    "categories": {
+      "description": "Economic data category tree (root id = 0)",
+      "endpoints": [
+        {
+          "path": "/fred/category",
+          "method": "GET",
+          "description": "Get a category by id",
+          "required": ["category_id"],
+          "optional": []
+        },
+        {
+          "path": "/fred/category/children",
+          "method": "GET",
+          "description": "Child categories under a parent",
+          "required": ["category_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/category/related",
+          "method": "GET",
+          "description": "Related categories (cross-links)",
+          "required": ["category_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/category/series",
+          "method": "GET",
+          "description": "All series in a category",
+          "required": ["category_id"],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order", "filter_variable", "filter_value", "tag_names", "exclude_tag_names"],
+          "order_by_values": ["series_id", "title", "units", "frequency", "seasonal_adjustment", "realtime_start", "realtime_end", "last_updated", "observation_start", "observation_end", "popularity", "group_popularity"]
+        },
+        {
+          "path": "/fred/category/tags",
+          "method": "GET",
+          "description": "Tags assigned to series in a category",
+          "required": ["category_id"],
+          "optional": ["realtime_start", "realtime_end", "tag_names", "tag_group_id", "search_text", "limit", "offset", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/category/related_tags",
+          "method": "GET",
+          "description": "Related tags for a tag set within a category",
+          "required": ["category_id", "tag_names"],
+          "optional": ["realtime_start", "realtime_end", "exclude_tag_names", "tag_group_id", "search_text", "limit", "offset", "order_by", "sort_order"]
+        }
+      ]
+    },
+    "releases": {
+      "description": "Economic data releases and their dates",
+      "endpoints": [
+        {
+          "path": "/fred/releases",
+          "method": "GET",
+          "description": "All releases of economic data",
+          "required": [],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order"],
+          "order_by_values": ["release_id", "name", "press_release", "realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/releases/dates",
+          "method": "GET",
+          "description": "Release dates across all releases",
+          "required": [],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order", "include_release_dates_with_no_data"]
+        },
+        {
+          "path": "/fred/release",
+          "method": "GET",
+          "description": "Single release by id",
+          "required": ["release_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/release/dates",
+          "method": "GET",
+          "description": "Release dates for one release",
+          "required": ["release_id"],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "sort_order", "include_release_dates_with_no_data"]
+        },
+        {
+          "path": "/fred/release/series",
+          "method": "GET",
+          "description": "Series in a release",
+          "required": ["release_id"],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order", "filter_variable", "filter_value", "tag_names", "exclude_tag_names"]
+        },
+        {
+          "path": "/fred/release/sources",
+          "method": "GET",
+          "description": "Sources for a release",
+          "required": ["release_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/release/tags",
+          "method": "GET",
+          "description": "Tags for a release",
+          "required": ["release_id"],
+          "optional": ["realtime_start", "realtime_end", "tag_names", "tag_group_id", "search_text", "limit", "offset", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/release/related_tags",
+          "method": "GET",
+          "description": "Related tags for a release",
+          "required": ["release_id", "tag_names"],
+          "optional": ["realtime_start", "realtime_end", "exclude_tag_names", "tag_group_id", "search_text", "limit", "offset", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/release/tables",
+          "method": "GET",
+          "description": "Hierarchical release tables",
+          "required": ["release_id"],
+          "optional": ["element_id", "include_observation_values", "observation_date"]
+        },
+        {
+          "path": "/fred/v2/release/observations",
+          "method": "GET",
+          "description": "Paginated bulk observations for every series in a release (cursor-based)",
+          "required": ["release_id"],
+          "optional": ["format", "limit", "next_cursor"],
+          "notes": "v2 endpoint. limit up to 500000 observations per request. Use next_cursor for pagination."
+        }
+      ]
+    },
+    "series": {
+      "description": "Economic data series — metadata, observations, search",
+      "endpoints": [
+        {
+          "path": "/fred/series",
+          "method": "GET",
+          "description": "Series metadata (title, units, frequency, etc.)",
+          "required": ["series_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/series/categories",
+          "method": "GET",
+          "description": "Categories the series belongs to",
+          "required": ["series_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/series/observations",
+          "method": "GET",
+          "description": "The data points — date/value pairs",
+          "required": ["series_id"],
+          "optional": [
+            "realtime_start", "realtime_end", "limit", "offset", "sort_order",
+            "observation_start", "observation_end",
+            "units", "frequency", "aggregation_method", "output_type", "vintage_dates"
+          ],
+          "units_values": {
+            "lin": "Levels (default)",
+            "chg": "Change",
+            "ch1": "Change from year ago",
+            "pch": "Percent change",
+            "pc1": "Percent change from year ago",
+            "pca": "Compounded annual rate of change",
+            "cch": "Continuously compounded rate of change",
+            "cca": "Continuously compounded annual rate of change",
+            "log": "Natural log"
+          },
+          "frequency_values": {
+            "d": "Daily",
+            "w": "Weekly (ending Friday default)",
+            "bw": "Biweekly (ending Wednesday default)",
+            "m": "Monthly",
+            "q": "Quarterly",
+            "sa": "Semi-Annual",
+            "a": "Annual",
+            "wef": "Weekly, Ending Friday",
+            "weth": "Weekly, Ending Thursday",
+            "wew": "Weekly, Ending Wednesday",
+            "wetu": "Weekly, Ending Tuesday",
+            "wem": "Weekly, Ending Monday",
+            "wesu": "Weekly, Ending Sunday",
+            "wesa": "Weekly, Ending Saturday",
+            "bwew": "Biweekly, Ending Wednesday",
+            "bwem": "Biweekly, Ending Monday"
+          },
+          "aggregation_method_values": {
+            "avg": "Average (default)",
+            "sum": "Sum",
+            "eop": "End of Period"
+          },
+          "output_type_values": {
+            "1": "Real-Time Period (default)",
+            "2": "Vintage Date, All Observations",
+            "3": "Vintage Date, New and Revised Observations Only",
+            "4": "Initial Release Only"
+          },
+          "limit_range": [1, 100000]
+        },
+        {
+          "path": "/fred/series/release",
+          "method": "GET",
+          "description": "Release that publishes the series",
+          "required": ["series_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/series/search",
+          "method": "GET",
+          "description": "Full-text search series by keywords",
+          "required": ["search_text"],
+          "optional": ["search_type", "realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order", "filter_variable", "filter_value", "tag_names", "exclude_tag_names"],
+          "search_type_values": ["full_text", "series_id"]
+        },
+        {
+          "path": "/fred/series/search/tags",
+          "method": "GET",
+          "description": "Tags for a series search result set",
+          "required": ["series_search_text"],
+          "optional": ["realtime_start", "realtime_end", "tag_names", "tag_group_id", "tag_search_text", "limit", "offset", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/series/search/related_tags",
+          "method": "GET",
+          "description": "Related tags for a series search",
+          "required": ["series_search_text", "tag_names"],
+          "optional": ["realtime_start", "realtime_end", "exclude_tag_names", "tag_group_id", "tag_search_text", "limit", "offset", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/series/tags",
+          "method": "GET",
+          "description": "Tags for a specific series",
+          "required": ["series_id"],
+          "optional": ["realtime_start", "realtime_end", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/series/updates",
+          "method": "GET",
+          "description": "Series sorted by last update (change feed)",
+          "required": [],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "filter_value", "start_time", "end_time"],
+          "filter_value_values": ["macro", "regional", "all"]
+        },
+        {
+          "path": "/fred/series/vintagedates",
+          "method": "GET",
+          "description": "Historical revision dates (ALFRED)",
+          "required": ["series_id"],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "sort_order"]
+        }
+      ]
+    },
+    "sources": {
+      "description": "Publishing agencies / data sources",
+      "endpoints": [
+        {
+          "path": "/fred/sources",
+          "method": "GET",
+          "description": "All data sources",
+          "required": [],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order"],
+          "order_by_values": ["source_id", "name", "realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/source",
+          "method": "GET",
+          "description": "Single source by id",
+          "required": ["source_id"],
+          "optional": ["realtime_start", "realtime_end"]
+        },
+        {
+          "path": "/fred/source/releases",
+          "method": "GET",
+          "description": "Releases published by a source",
+          "required": ["source_id"],
+          "optional": ["realtime_start", "realtime_end", "limit", "offset", "order_by", "sort_order"]
+        }
+      ]
+    },
+    "tags": {
+      "description": "Tags classify series across 7 tag groups",
+      "endpoints": [
+        {
+          "path": "/fred/tags",
+          "method": "GET",
+          "description": "All tags, search tags, or get by name",
+          "required": [],
+          "optional": ["realtime_start", "realtime_end", "tag_names", "tag_group_id", "search_text", "limit", "offset", "order_by", "sort_order"],
+          "order_by_values": ["series_count", "popularity", "created", "name", "group_id"]
+        },
+        {
+          "path": "/fred/related_tags",
+          "method": "GET",
+          "description": "Related tags for one or more tags",
+          "required": ["tag_names"],
+          "optional": ["realtime_start", "realtime_end", "exclude_tag_names", "tag_group_id", "search_text", "limit", "offset", "order_by", "sort_order"]
+        },
+        {
+          "path": "/fred/tags/series",
+          "method": "GET",
+          "description": "Series matching a tag set",
+          "required": ["tag_names"],
+          "optional": ["realtime_start", "realtime_end", "exclude_tag_names", "limit", "offset", "order_by", "sort_order"]
+        }
+      ]
+    }
+  }
+}
