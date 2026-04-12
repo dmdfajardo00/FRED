@@ -5,6 +5,19 @@ node_modules/
 *.log
 
 # ===========================================
+# app/ — SvelteKit dashboard
+# ===========================================
+app/node_modules/
+app/build/
+app/.svelte-kit/
+app/.env
+app/.env.local
+
+# Playwright screenshots and test artifacts
+.playwright/
+.playwright-mcp/
+
+# ===========================================
 # data/fred/ — mixed authoritative + derivation
 # ===========================================
 # Keep (small reference / helpful for reviewers):
