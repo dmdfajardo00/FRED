@@ -61,3 +61,6 @@ data/fred/series-index-progress.json
 data/fred/obs-progress-*.json
 data/fred/series-progress-*.json
 data/fred/taxonomy/*.tmp.json
+api/node_modules/
+api/build/
+api/.svelte-kit/
