@@ -1,9 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL;
-const API_KEY = import.meta.env.VITE_API_KEY;
-
-if (!API_URL) {
-	console.warn('[api] VITE_API_URL not set — API calls will fail');
-}
+const API_URL = import.meta.env.VITE_API_URL || '';
+const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 export interface SeriesSummary {
 	id: string;
@@ -30,9 +26,23 @@ async function get<T>(path: string): Promise<T> {
 	return res.json();
 }
 
-export async function searchSeries(q: string, limit = 20): Promise<SeriesSummary[]> {
-	if (q.length < 2) return [];
-	const data = await get<{ series: SeriesSummary[] }>(`/api/series/search?q=${encodeURIComponent(q)}&limit=${limit}`);
+export interface SearchFilters {
+	q: string;
+	limit?: number;
+	offset?: number;
+	category?: string;
+	tag?: string;
+	frequency?: string;
+}
+
+export async function searchSeries(filters: SearchFilters): Promise<SeriesSummary[]> {
+	const { q, limit = 24, offset = 0, category, tag, frequency } = filters;
+	if (q.length < 1) return [];
+	const params = new URLSearchParams({ q, limit: String(limit), offset: String(offset) });
+	if (category) params.set('category', category);
+	if (tag) params.set('tag', tag);
+	if (frequency) params.set('frequency', frequency);
+	const data = await get<{ series: SeriesSummary[] }>(`/api/series/search?${params}`);
 	return data.series;
 }
 

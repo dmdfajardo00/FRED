@@ -4,7 +4,7 @@
 	let {
 		value = '',
 		placeholder = 'Search...',
-		debounceMs = 300,
+		debounceMs = 200,
 		onsearch = (_q: string) => {}
 	}: {
 		value?: string;

@@ -1,82 +1,102 @@
 <script lang="ts">
-	import { searchSeries, listSeries, fetchStats, type SeriesSummary } from '$lib/api';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { searchSeries, listSeries, fetchStats, fetchObservations, type SeriesSummary } from '$lib/api';
 	import SeriesCard from '$lib/components/gallery/SeriesCard.svelte';
 	import SearchInput from '$lib/components/shared/SearchInput.svelte';
 	import InfiniteScroll from '$lib/components/shared/InfiniteScroll.svelte';
 	import Icon from '@iconify/svelte';
 
 	const PAGE_SIZE = 24;
+	const SPARK_YEARS = 5;
 
-	let query = $state('');
+	// URL-driven state
+	const urlQuery = $derived($page.url.searchParams.get('q') ?? '');
+	const urlCategory = $derived($page.url.searchParams.get('category') ?? '');
+	const urlTag = $derived($page.url.searchParams.get('tag') ?? '');
+	const urlFrequency = $derived($page.url.searchParams.get('frequency') ?? '');
+
 	let results = $state<SeriesSummary[]>([]);
+	let sparklines = $state<Record<string, (number | null)[]>>({});
 	let offset = $state(0);
 	let hasMore = $state(true);
 	let loading = $state(false);
-	let searching = $state(false);
 	let stats = $state<Record<string, number> | null>(null);
 
-	const isSearching = $derived(query.length >= 2);
+	const isSearching = $derived(urlQuery.length >= 1);
+	const seenIds = new Set<string>();
 
-	$effect(() => {
-		fetchStats().then((s) => { stats = s; }).catch(() => {});
-	});
-
-	// Load initial popular series
-	let initialized = $state(false);
-	$effect(() => {
-		if (!initialized) {
-			initialized = true;
-			loading = true;
-			listSeries(0, PAGE_SIZE)
-				.then((s) => { results = s; hasMore = s.length >= PAGE_SIZE; })
-				.catch(() => {})
-				.finally(() => { loading = false; });
+	function dedupe(incoming: SeriesSummary[]): SeriesSummary[] {
+		const fresh: SeriesSummary[] = [];
+		for (const s of incoming) {
+			if (!seenIds.has(s.id)) {
+				seenIds.add(s.id);
+				fresh.push(s);
+			}
 		}
-	});
-
-	async function handleSearch(q: string) {
-		query = q;
-		offset = 0;
-		hasMore = true;
-
-		if (q.length < 2) {
-			searching = false;
-			loading = true;
-			listSeries(0, PAGE_SIZE)
-				.then((s) => { results = s; hasMore = s.length >= PAGE_SIZE; })
-				.catch(() => { results = []; })
-				.finally(() => { loading = false; });
-			return;
-		}
-
-		searching = true;
-		loading = true;
-		try {
-			results = await searchSeries(q, PAGE_SIZE);
-			hasMore = results.length >= PAGE_SIZE;
-		} catch {
-			results = [];
-			hasMore = false;
-		}
-		loading = false;
-		searching = false;
+		return fresh;
 	}
 
-	async function loadMore() {
-		if (loading || !hasMore) return;
-		loading = true;
-		offset += PAGE_SIZE;
+	function updateUrl(q: string) {
+		const params = new URLSearchParams();
+		if (q) params.set('q', q);
+		if (urlCategory) params.set('category', urlCategory);
+		if (urlTag) params.set('tag', urlTag);
+		if (urlFrequency) params.set('frequency', urlFrequency);
+		const qs = params.toString();
+		goto(`/gallery${qs ? '?' + qs : ''}`, { replaceState: true, keepFocus: true, noScroll: true });
+	}
 
+	async function loadSparklines(series: SeriesSummary[]) {
+		const ids = series.map((s) => s.id).filter((id) => !sparklines[id]);
+		if (ids.length === 0) return;
+		const startDate = new Date();
+		startDate.setFullYear(startDate.getFullYear() - SPARK_YEARS);
 		try {
-			const more = isSearching
-				? await searchSeries(query, PAGE_SIZE)
+			const data = await fetchObservations(ids, startDate.toISOString().slice(0, 10));
+			sparklines = { ...sparklines, ...Object.fromEntries(Object.entries(data).map(([id, obs]) => [id, obs.values])) };
+		} catch {}
+	}
+
+	async function loadPage() {
+		loading = true;
+		try {
+			const raw = isSearching
+				? await searchSeries({ q: urlQuery, limit: PAGE_SIZE, offset, category: urlCategory || undefined, tag: urlTag || undefined, frequency: urlFrequency || undefined })
 				: await listSeries(offset, PAGE_SIZE);
-			results = [...results, ...more];
-			hasMore = more.length >= PAGE_SIZE;
+			const fresh = dedupe(raw);
+			results = [...results, ...fresh];
+			hasMore = raw.length >= PAGE_SIZE;
+			loadSparklines(fresh);
 		} catch {
 			hasMore = false;
 		}
 		loading = false;
+	}
+
+	// React to URL changes
+	let lastKey = '';
+	$effect(() => {
+		const key = `${urlQuery}|${urlCategory}|${urlTag}|${urlFrequency}`;
+		if (key !== lastKey) {
+			lastKey = key;
+			results = [];
+			sparklines = {};
+			offset = 0;
+			hasMore = true;
+			seenIds.clear();
+			loadPage();
+		}
+	});
+
+	$effect(() => { fetchStats().then((s) => { stats = s; }).catch(() => {}); });
+
+	function handleSearch(q: string) { updateUrl(q); }
+
+	function loadMore() {
+		if (loading || !hasMore) return;
+		offset += PAGE_SIZE;
+		loadPage();
 	}
 
 	function formatStat(n: number): string {
@@ -118,45 +138,59 @@
 
 <div class="max-w-md mb-6">
 	<SearchInput
-		placeholder="Search 840K series... (e.g. unemployment, CPI, GDP)"
+		value={urlQuery}
+		placeholder="Search 840K series... (e.g. unemployment, CPI, UNRATE)"
 		onsearch={handleSearch}
 	/>
 </div>
 
-{#if isSearching}
-	<div class="flex items-center gap-2 mb-3">
-		<h2 class="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-			Results for "{query}"
-		</h2>
-		{#if searching}
-			<div class="w-3.5 h-3.5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+{#if urlTag || urlCategory || urlFrequency}
+	<div class="flex flex-wrap gap-1.5 mb-4">
+		{#if urlCategory}
+			<span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs flex items-center gap-1">
+				Category: {urlCategory}
+				<button onclick={() => { const p = new URLSearchParams($page.url.searchParams); p.delete('category'); goto(`/gallery?${p}`, { replaceState: true }); }} class="hover:text-foreground">&times;</button>
+			</span>
+		{/if}
+		{#if urlTag}
+			<span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs flex items-center gap-1">
+				Tag: {urlTag}
+				<button onclick={() => { const p = new URLSearchParams($page.url.searchParams); p.delete('tag'); goto(`/gallery?${p}`, { replaceState: true }); }} class="hover:text-foreground">&times;</button>
+			</span>
+		{/if}
+		{#if urlFrequency}
+			<span class="px-2 py-1 rounded-full bg-primary/10 text-primary text-xs flex items-center gap-1">
+				Frequency: {urlFrequency}
+				<button onclick={() => { const p = new URLSearchParams($page.url.searchParams); p.delete('frequency'); goto(`/gallery?${p}`, { replaceState: true }); }} class="hover:text-foreground">&times;</button>
+			</span>
 		{/if}
 	</div>
-{:else}
-	<h2 class="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">Popular Series</h2>
 {/if}
+
+<h2 class="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+	{#if isSearching}
+		Results for "{urlQuery}"
+	{:else}
+		Popular Series
+	{/if}
+</h2>
 
 {#if results.length > 0}
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-		{#each results as series (series.id)}
-			<SeriesCard {series} />
+		{#each results as series, i (series.id)}
+			<SeriesCard {series} sparkData={sparklines[series.id]} index={i} />
 		{/each}
 	</div>
 	<InfiniteScroll {hasMore} {loading} onloadmore={loadMore} />
-{:else if !loading && !searching}
-	<div class="text-center py-12">
-		{#if isSearching}
-			<Icon icon="material-symbols:search-off" width={40} class="text-muted-foreground/30 mx-auto" />
-			<p class="text-sm text-muted-foreground mt-2">No series found for "{query}"</p>
-		{:else}
-			<div class="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
-			<p class="text-sm text-muted-foreground mt-2">Loading series...</p>
-		{/if}
-	</div>
-{:else if loading && results.length === 0}
+{:else if loading}
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 		{#each Array(8) as _}
-			<div class="rounded-xl bg-card border border-border h-[120px] animate-pulse"></div>
+			<div class="rounded-xl bg-card border border-border h-[160px] animate-pulse"></div>
 		{/each}
+	</div>
+{:else}
+	<div class="text-center py-12">
+		<Icon icon="material-symbols:search-off" width={40} class="text-muted-foreground/30 mx-auto" />
+		<p class="text-sm text-muted-foreground mt-2">No series found for "{urlQuery}"</p>
 	</div>
 {/if}

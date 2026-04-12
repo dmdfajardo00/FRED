@@ -7,7 +7,8 @@ let db: Database | null = null;
 export async function getDb(): Promise<Database> {
 	if (!db) {
 		db = await Database.create(DB_PATH, { access_mode: 'READ_ONLY' });
-		console.log(`[db] Connected to DuckDB at ${DB_PATH}`);
+		await db.run('LOAD fts');
+		console.log(`[db] Connected to DuckDB at ${DB_PATH} (FTS loaded)`);
 	}
 	return db;
 }
