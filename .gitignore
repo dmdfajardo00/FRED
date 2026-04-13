@@ -4,14 +4,9 @@ node_modules/
 .DS_Store
 *.log
 
-# ===========================================
-# app/ — SvelteKit dashboard
-# ===========================================
-app/node_modules/
-app/build/
-app/.svelte-kit/
-app/.env
-app/.env.local
+# SvelteKit build artifacts
+build/
+.svelte-kit/
 
 # Playwright screenshots and test artifacts
 .playwright/
@@ -64,3 +59,4 @@ data/fred/taxonomy/*.tmp.json
 api/node_modules/
 api/build/
 api/.svelte-kit/
+tmp/
