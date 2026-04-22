@@ -172,3 +172,39 @@ export async function fetchPulseCountries(metric: string, year?: number): Promis
 	if (year != null) params.set('year', String(year));
 	return get(`/api/pulse/countries?${params}`);
 }
+
+export interface CountrySummary {
+	iso3: string;
+	name: string;
+	categoryId: number;
+	seriesCount: number;
+}
+
+export async function listCountries(): Promise<CountrySummary[]> {
+	const d = await get<{ countries: CountrySummary[] }>(`/api/countries`);
+	return d.countries;
+}
+
+export interface CountryHeadline {
+	value: number | null;
+	seriesId: string;
+	date: string | null;
+}
+
+export interface CountryDetail {
+	iso3: string;
+	name: string;
+	categoryId: number;
+	seriesCount: number;
+	series: SeriesSummary[];
+	headline: {
+		gdp_per_capita: CountryHeadline | null;
+		population: CountryHeadline | null;
+		inflation: CountryHeadline | null;
+		life_expectancy: CountryHeadline | null;
+	};
+}
+
+export async function getCountry(iso3: string, limit = 30): Promise<CountryDetail> {
+	return get(`/api/countries/${encodeURIComponent(iso3)}?limit=${limit}`);
+}
