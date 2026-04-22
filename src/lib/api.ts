@@ -146,3 +146,29 @@ export interface PulseResponse {
 export async function fetchPulseStates(metric = 'unemployment'): Promise<PulseResponse> {
 	return get(`/api/pulse/states?metric=${metric}`);
 }
+
+export interface CountryPulseDatum {
+	value: number | null;
+	seriesId: string;
+	date: string | null;
+}
+
+export interface CountryPulseResponse {
+	metric: string;
+	label: string;
+	unit: '$' | '%' | 'people';
+	coverage: 'global' | 'oecd';
+	year: number;
+	min: number;
+	max: number;
+	median: number;
+	countries_with_data: number;
+	total_countries: number;
+	data: Record<string, CountryPulseDatum>;
+}
+
+export async function fetchPulseCountries(metric: string, year?: number): Promise<CountryPulseResponse> {
+	const params = new URLSearchParams({ metric });
+	if (year != null) params.set('year', String(year));
+	return get(`/api/pulse/countries?${params}`);
+}

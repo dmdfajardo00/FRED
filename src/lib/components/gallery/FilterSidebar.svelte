@@ -48,10 +48,17 @@
 </script>
 
 <aside
-	class="w-[240px] shrink-0 px-[22px] py-7 border-r sticky top-[52px] self-start overflow-auto"
+	class="scrollbar-thin"
+	style:position="fixed"
+	style:left="0"
+	style:top="52px"
+	style:bottom="0"
+	style:width="240px"
+	style:padding="28px 22px 28px 28px"
+	style:border-right="1px solid var(--border-faint)"
 	style:background="var(--bg-soft)"
-	style:border-color="var(--border-faint)"
-	style:height="calc(100vh - 52px)"
+	style:overflow-y="auto"
+	style:z-index="10"
 >
 	<div class="flex items-center justify-between mb-[18px]">
 		<div class="font-mono text-[12px] tracking-[0.05em]" style:color="var(--ink-2)">FILTERS</div>

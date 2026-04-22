@@ -137,10 +137,10 @@
 	}
 </script>
 
-<div class="flex min-h-screen">
+<div class="min-h-screen" style:padding-left="240px">
 	<FilterSidebar bind:filters onClear={onClearFilters} />
 
-	<main class="flex-1 px-10 py-7 pb-[60px] max-w-[1360px]">
+	<main class="px-10 py-7 pb-[60px] max-w-[1360px] mx-auto">
 		<div class="flex items-baseline justify-between mb-1">
 			<div>
 				<h1 class="text-[26px] font-medium tracking-[-0.01em] m-0" style:color="var(--ink-0)">Command Center</h1>
