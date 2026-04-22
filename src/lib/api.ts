@@ -156,7 +156,7 @@ export interface CountryPulseDatum {
 export interface CountryPulseResponse {
 	metric: string;
 	label: string;
-	unit: '$' | '%' | 'people';
+	unit: '$' | '%' | 'people' | 'years';
 	coverage: 'global' | 'oecd';
 	year: number;
 	min: number;

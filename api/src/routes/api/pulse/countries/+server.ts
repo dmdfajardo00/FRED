@@ -71,7 +71,7 @@ const OECD_ISO2 = [
 
 type MetricConfig = {
 	label: string;
-	unit: '$' | '%' | 'people';
+	unit: '$' | '%' | 'people' | 'years';
 	coverage: 'global' | 'oecd';
 	frequency: 'annual' | 'monthly';
 	buildId: (code: string) => string;
@@ -98,14 +98,32 @@ const METRICS: Record<string, MetricConfig> = {
 		codes: ALL_ISO2,
 		codeType: 'iso2'
 	},
-	cpi_yoy: {
-		label: 'CPI (% change from year ago)',
+	inflation: {
+		label: 'Inflation, consumer prices (% YoY)',
 		unit: '%',
-		coverage: 'oecd',
-		frequency: 'monthly',
-		buildId: (iso2) => `CPALTT01${iso2}M657N`,
-		codes: OECD_ISO2,
-		codeType: 'iso2'
+		coverage: 'global',
+		frequency: 'annual',
+		buildId: (iso3) => `FPCPITOTLZG${iso3}`,
+		codes: ISO3_CODES,
+		codeType: 'iso3'
+	},
+	life_expectancy: {
+		label: 'Life Expectancy at Birth (years)',
+		unit: 'years',
+		coverage: 'global',
+		frequency: 'annual',
+		buildId: (iso3) => `SPDYNLE00IN${iso3}`,
+		codes: ISO3_CODES,
+		codeType: 'iso3'
+	},
+	internet_users: {
+		label: 'Internet Users (% of population)',
+		unit: '%',
+		coverage: 'global',
+		frequency: 'annual',
+		buildId: (iso3) => `ITNETUSERP2${iso3}`,
+		codes: ISO3_CODES,
+		codeType: 'iso3'
 	},
 	unemployment: {
 		label: 'Harmonised Unemployment Rate',

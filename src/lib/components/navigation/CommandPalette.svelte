@@ -11,8 +11,8 @@
 	let searching = $state(false);
 
 	const NAV_ITEMS = [
-		{ id: 'gallery', label: 'Go to Command Center', hint: 'Gallery', path: '/gallery' },
 		{ id: 'pulse', label: 'Go to Global Pulse', hint: 'Map', path: '/pulse' },
+		{ id: 'gallery', label: 'Go to Command Center', hint: 'Gallery', path: '/gallery' },
 		{ id: 'library', label: 'Go to Library', hint: 'Library', path: '/library' },
 		{ id: 'releases', label: 'Go to Releases', hint: 'Releases', path: '/releases' }
 	] as const;

@@ -6,17 +6,17 @@
 	let { onCmd }: { onCmd: () => void } = $props();
 
 	const tabs = [
-		['/gallery', 'Command Center'],
 		['/pulse', 'Global Pulse'],
+		['/gallery', 'Command Center'],
 		['/library', 'Library'],
 		['/releases', 'Releases']
 	] as const;
 
-	const currentTab = $derived(tabs.find(([path]) => $page.url.pathname.startsWith(path))?.[0] ?? '/gallery');
+	const currentTab = $derived(tabs.find(([path]) => $page.url.pathname.startsWith(path))?.[0] ?? '/pulse');
 </script>
 
 <header class="sticky top-0 z-20 flex items-center h-[52px] px-7 bg-[var(--bg)] border-b border-[var(--border-faint)]">
-	<a href="/gallery" class="flex items-center gap-[11px] mr-8 no-underline">
+	<a href="/pulse" class="flex items-center gap-[11px] mr-8 no-underline">
 		<svg width="22" height="22" viewBox="0 0 22 22" class="block shrink-0">
 			<rect x="2" y="4" width="4" height="14" fill="var(--ink-0)" />
 			<rect x="7" y="8" width="4" height="10" fill="var(--ink-0)" opacity="0.75" />

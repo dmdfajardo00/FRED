@@ -17,14 +17,16 @@
 	] as const;
 
 	const GLOBAL_METRICS = [
-		{ key: 'gdp_per_capita', label: 'GDP/cap', higherIsBetter: true, annual: true },
-		{ key: 'population', label: 'Population', higherIsBetter: true, annual: true },
-		{ key: 'cpi_yoy', label: 'CPI y/y', higherIsBetter: false, annual: false },
-		{ key: 'unemployment', label: 'Unemployment', higherIsBetter: false, annual: false }
+		{ key: 'gdp_per_capita',  label: 'GDP per capita',  higherIsBetter: true,  annual: true  },
+		{ key: 'life_expectancy', label: 'Life expectancy', higherIsBetter: true,  annual: true  },
+		{ key: 'inflation',       label: 'Inflation',       higherIsBetter: false, annual: true  },
+		{ key: 'internet_users',  label: 'Internet users',  higherIsBetter: true,  annual: true  },
+		{ key: 'population',      label: 'Population',      higherIsBetter: true,  annual: true  },
+		{ key: 'unemployment',    label: 'Unemployment',    higherIsBetter: false, annual: false }
 	] as const;
 
-	type Scope = 'us' | 'global';
-	let scope = $state<Scope>('us');
+	type Scope = 'global' | 'us';
+	let scope = $state<Scope>('global');
 
 	// US state scope
 	let metric = $state<(typeof METRIC_OPTIONS)[number]['key']>('unemployment');
@@ -34,9 +36,8 @@
 
 	// Global scope
 	let globalMetric = $state<(typeof GLOBAL_METRICS)[number]['key']>('gdp_per_capita');
-	let year = $state(2025);
+	let year = $state(2024);
 	let logScale = $state(false);
-	let projection = $state('equal_earth');
 	let countries = $state<CountryPulseResponse | null>(null);
 	let loadingGlobal = $state(false);
 
@@ -87,6 +88,7 @@
 			return Math.round(v).toLocaleString();
 		}
 		if (unit === '%') return v.toFixed(2) + '%';
+		if (unit === 'years') return v.toFixed(1) + ' yr';
 		return v.toFixed(2) + unit;
 	}
 
@@ -298,53 +300,58 @@
 			</div>
 		</div>
 
-		<div class="flex items-center gap-4 mb-[18px] flex-wrap">
-			<label class="flex items-center gap-2 text-[12px]" style:color="var(--ink-2)">
-				<span class="font-mono text-[11px] tracking-[0.06em] uppercase" style:color="var(--ink-3)">Projection</span>
-				<select bind:value={projection}
-					class="h-8 px-2 text-[12px] rounded-[5px]"
-					style:background="var(--bg)"
-					style:color="var(--ink-1)"
-					style:border="1px solid var(--border)">
-					<option value="equal_earth">Equal Earth</option>
-				</select>
-			</label>
-
-			<div class="flex items-center gap-1" style:opacity={currentGlobalMeta.annual ? '1' : '0.4'}>
-				<span class="font-mono text-[11px] tracking-[0.06em] uppercase mr-1" style:color="var(--ink-3)">Year</span>
+		<div class="flex items-center gap-5 mb-[22px] flex-wrap">
+			<div class="flex items-center gap-[6px]" style:opacity={currentGlobalMeta.annual ? '1' : '0.35'}>
+				<span class="font-mono text-[10px] tracking-[0.08em] uppercase mr-[6px]" style:color="var(--ink-3)">Year</span>
 				<button type="button"
+					aria-label="Previous year"
 					disabled={!currentGlobalMeta.annual || year <= 1990}
 					onclick={() => { if (year > 1990) year -= 1; }}
-					class="h-8 w-8 rounded-[5px] cursor-pointer text-[13px]"
-					style:background="var(--bg)"
-					style:color="var(--ink-2)"
-					style:border="1px solid var(--border)">◀</button>
-				<span class="font-mono text-[13px] px-3 min-w-[56px] text-center" style:color="var(--ink-0)">{currentGlobalMeta.annual ? year : '—'}</span>
+					class="stepper-btn">
+					<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5">
+						<path d="M7.5 2.5 L4 6 L7.5 9.5" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</button>
+				<span class="font-mono text-[13px] min-w-[48px] text-center tabular-nums" style:color="var(--ink-0)">
+					{currentGlobalMeta.annual ? year : 'latest'}
+				</span>
 				<button type="button"
-					disabled={!currentGlobalMeta.annual || year >= 2025}
-					onclick={() => { if (year < 2025) year += 1; }}
-					class="h-8 w-8 rounded-[5px] cursor-pointer text-[13px]"
-					style:background="var(--bg)"
-					style:color="var(--ink-2)"
-					style:border="1px solid var(--border)">▶</button>
+					aria-label="Next year"
+					disabled={!currentGlobalMeta.annual || year >= 2024}
+					onclick={() => { if (year < 2024) year += 1; }}
+					class="stepper-btn">
+					<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5">
+						<path d="M4.5 2.5 L8 6 L4.5 9.5" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</button>
 			</div>
 
-			<label class="flex items-center gap-2 text-[12px] cursor-pointer" style:color="var(--ink-2)">
-				<input type="checkbox" bind:checked={logScale} />
-				<span>Log scale</span>
+			<label class="flex items-center gap-2 text-[12px] cursor-pointer select-none" style:color="var(--ink-2)">
+				<input type="checkbox" bind:checked={logScale} class="accent-[color:var(--accent)]" />
+				<span class="font-mono text-[10px] tracking-[0.08em] uppercase" style:color="var(--ink-3)">Log scale</span>
 			</label>
+
+			{#if countries}
+				<div class="ml-auto font-mono text-[10px] tracking-[0.06em] uppercase flex items-center gap-[10px]" style:color="var(--ink-3)">
+					<span>Range</span>
+					<span class="tabular-nums" style:color="var(--ink-1)">{formatMetric(countries.min, countries.unit)} → {formatMetric(countries.max, countries.unit)}</span>
+					<span>·</span>
+					<span>{countries.countries_with_data}/{countries.total_countries} ctr</span>
+				</div>
+			{/if}
 		</div>
 
 		<div class="grid gap-8" style:grid-template-columns="1fr 300px">
 			<div class="relative rounded-[6px] px-4 py-4" style:background="var(--bg)" style:border="1px solid var(--border)">
 				<div class="flex justify-between items-start mb-2 px-3">
 					<div>
-						<div class="font-mono text-[11px] tracking-[0.06em] uppercase mb-1" style:color="var(--ink-3)">Viewing</div>
-						<div class="text-[18px] font-medium" style:color="var(--ink-0)">{countries?.label ?? 'Loading…'}</div>
+						<div class="font-mono text-[10px] tracking-[0.08em] uppercase mb-1" style:color="var(--ink-3)">Viewing</div>
+						<div class="text-[17px] font-medium tracking-[-0.005em]" style:color="var(--ink-0)">{countries?.label ?? 'Loading…'}</div>
 					</div>
-					{#if countries}
-						<div class="font-mono text-[11px] text-right" style:color="var(--ink-3)">
-							range: {formatMetric(countries.min, countries.unit)} — {formatMetric(countries.max, countries.unit)}
+					{#if countries?.coverage === 'oecd'}
+						<div class="font-mono text-[10px] tracking-[0.05em] uppercase px-[7px] py-[3px] rounded-[3px]"
+							style:color="var(--ink-3)" style:background="var(--bg-soft)" style:border="1px solid var(--border)">
+							OECD only
 						</div>
 					{/if}
 				</div>
@@ -429,3 +436,23 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.stepper-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		padding: 0;
+		border-radius: 4px;
+		background: var(--bg);
+		color: var(--ink-2);
+		border: 1px solid var(--border);
+		cursor: pointer;
+		transition: background 140ms, color 140ms, transform 120ms;
+	}
+	.stepper-btn:hover:not(:disabled) { background: var(--bg-soft); color: var(--ink-0); }
+	.stepper-btn:active:not(:disabled) { transform: scale(0.94); }
+	.stepper-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
