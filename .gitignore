@@ -60,3 +60,4 @@ api/node_modules/
 api/build/
 api/.svelte-kit/
 tmp/
+.design-tmp/

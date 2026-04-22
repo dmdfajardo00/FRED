@@ -1,32 +1,40 @@
 <script lang="ts">
-  import '../app.css';
-  import { createSidebarContext, setSidebarContext } from '$lib/stores/sidebar';
-  import { initTheme } from '$lib/stores/theme';
-  import AppSidebar from '$lib/components/navigation/AppSidebar.svelte';
+	import '../app.css';
+	import { initTheme } from '$lib/stores/theme';
+	import TopNav from '$lib/components/navigation/TopNav.svelte';
+	import CommandPalette from '$lib/components/navigation/CommandPalette.svelte';
 
-  const { children } = $props();
+	const { children } = $props();
 
-  const sidebarCtx = createSidebarContext(false);
-  setSidebarContext(sidebarCtx);
+	let cmdOpen = $state(false);
 
-  const { open } = sidebarCtx;
+	$effect(() => {
+		initTheme();
 
-  $effect(() => {
-    initTheme();
-  });
+		function onKey(e: KeyboardEvent) {
+			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+				e.preventDefault();
+				cmdOpen = !cmdOpen;
+			}
+		}
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
+	});
 </script>
 
-<div class="h-screen overflow-hidden flex">
-  <AppSidebar />
-
-  <main
-    class={[
-      'flex-1 overflow-y-auto bg-background transition-all duration-200',
-      $open ? 'ml-[260px]' : 'ml-14'
-    ].join(' ')}
-  >
-    <div class="max-w-[1400px] mx-auto px-6 py-6">
-      {@render children?.()}
-    </div>
-  </main>
+<div class="min-h-screen" style:background="var(--bg)">
+	<TopNav onCmd={() => (cmdOpen = true)} />
+	<main>
+		{@render children?.()}
+	</main>
+	<CommandPalette bind:open={cmdOpen} />
 </div>
+
+<style>
+	:global(html, body) {
+		overflow: auto;
+		height: auto;
+		position: static;
+		width: auto;
+	}
+</style>

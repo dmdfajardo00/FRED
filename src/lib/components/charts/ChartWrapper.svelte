@@ -137,7 +137,7 @@
 			y="y"
 			xScale={scaleTime()}
 			yScale={scaleLinear()}
-			{xDomain}
+			xDomain={xDomain as unknown as [number, number] | undefined}
 			{yDomain}
 			{padding}
 		>
