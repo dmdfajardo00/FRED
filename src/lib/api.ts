@@ -1,5 +1,4 @@
 const API_URL = import.meta.env.VITE_API_URL || '';
-const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 export interface SeriesSummary {
 	id: string;
@@ -48,7 +47,6 @@ export interface CategorySummary {
 
 async function get<T>(path: string): Promise<T> {
 	const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-	if (API_KEY) headers['X-API-Key'] = API_KEY;
 
 	const res = await fetch(`${API_URL}${path}`, { headers });
 	if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
