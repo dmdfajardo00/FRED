@@ -54,7 +54,7 @@
 	style:top="52px"
 	style:bottom="0"
 	style:width="240px"
-	style:padding="28px 22px 28px 28px"
+	style:padding="16px 22px 28px 28px"
 	style:border-right="1px solid var(--border-faint)"
 	style:background="var(--bg-soft)"
 	style:overflow-y="auto"
