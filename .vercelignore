@@ -1,0 +1,6 @@
+api/
+data/
+scripts/
+docs/
+.design-tmp/
+.playwright/
