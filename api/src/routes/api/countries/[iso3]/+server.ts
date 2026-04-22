@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { query } from '$lib/db';
-import { getCountriesCached } from '../+server';
+import { _getCountriesCached } from '../+server';
 import type { RequestHandler } from './$types';
 
 // ISO3 -> ISO2 for the World Bank population series (POPTOT{ISO2}A647NWDB)
@@ -60,7 +60,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 	const iso3 = params.iso3.toUpperCase();
 	const limit = Math.min(parseInt(url.searchParams.get('limit') || '30'), 200);
 
-	const countries = await getCountriesCached();
+	const countries = await _getCountriesCached();
 	const country = countries.find((c) => c.iso3 === iso3);
 	if (!country) throw error(404, `Unknown country iso3: ${iso3}`);
 

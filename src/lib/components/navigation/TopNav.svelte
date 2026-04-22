@@ -15,7 +15,7 @@
 	const currentTab = $derived(tabs.find(([path]) => $page.url.pathname.startsWith(path))?.[0] ?? '/pulse');
 </script>
 
-<header class="sticky top-0 z-20 flex items-center h-[52px] px-7 bg-[var(--bg)] border-b border-[var(--border-faint)]">
+<header class="fixed top-0 left-0 right-0 z-30 flex items-center h-[52px] px-7 bg-[var(--bg)] border-b border-[var(--border-faint)]">
 	<a href="/pulse" class="flex items-center gap-[11px] mr-8 no-underline">
 		<svg width="22" height="22" viewBox="0 0 22 22" class="block shrink-0">
 			<rect x="2" y="4" width="4" height="14" fill="var(--ink-0)" />

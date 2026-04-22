@@ -358,7 +358,7 @@ async function loadCountries(): Promise<CountrySummary[]> {
 	return countries;
 }
 
-export async function getCountriesCached(): Promise<CountrySummary[]> {
+export async function _getCountriesCached(): Promise<CountrySummary[]> {
 	if (cached) return cached;
 	if (!cachePromise) {
 		cachePromise = loadCountries().then((result) => {
@@ -370,6 +370,6 @@ export async function getCountriesCached(): Promise<CountrySummary[]> {
 }
 
 export const GET: RequestHandler = async () => {
-	const countries = await getCountriesCached();
+	const countries = await _getCountriesCached();
 	return json({ countries, total: countries.length });
 };

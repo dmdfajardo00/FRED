@@ -24,7 +24,7 @@
 
 <div class="min-h-screen" style:background="var(--bg)">
 	<TopNav onCmd={() => (cmdOpen = true)} />
-	<main>
+	<main style:padding-top="52px">
 		{@render children?.()}
 	</main>
 	<CommandPalette bind:open={cmdOpen} />
