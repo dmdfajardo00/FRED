@@ -11,17 +11,20 @@
 	import Crosshair from './Crosshair.svelte';
 	import ChartOverlay from './ChartOverlay.svelte';
 	import HoverTooltip from './HoverTooltip.svelte';
+	import RecessionBands from './RecessionBands.svelte';
 
 	let {
 		config = undefined as ChartConfig | undefined,
 		configs = undefined as ChartConfig[] | undefined,
 		height = 400,
-		mini = false
+		mini = false,
+		recessionPeriods = [] as Array<[Date, Date]>
 	}: {
 		config?: ChartConfig;
 		configs?: ChartConfig[];
 		height?: number;
 		mini?: boolean;
+		recessionPeriods?: Array<[Date, Date]>;
 	} = $props();
 
 	const displayConfigs = $derived(configs ?? (config ? [config] : []));
@@ -145,6 +148,10 @@
 				{#if !mini}
 					<AxisX />
 					<AxisY />
+				{/if}
+
+				{#if !mini && recessionPeriods.length > 0}
+					<RecessionBands periods={recessionPeriods} />
 				{/if}
 
 				{#each layers as layer, i}

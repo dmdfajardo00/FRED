@@ -9,6 +9,7 @@
 	import { pinned, togglePin } from '$lib/stores/pinned';
 	import { formatValue, formatLongDate, formatFrequency } from '$lib/utils/format';
 	import { colorForSeries } from '$lib/utils/seriesColor';
+	import { getRecessionPeriods } from '$lib/utils/recessions';
 
 	const id = $derived($page.params.id ?? '');
 	const isPinned = $derived($pinned.includes(id));
@@ -30,6 +31,20 @@
 
 	let notes = $state<{ id: number; text: string }[]>([]);
 	let noteDraft = $state('');
+
+	// Recession bars overlay (NBER, monthly USREC)
+	let recessionsOn = $state(false);
+	let recessionPeriodsAll = $state<Array<[Date, Date]>>([]);
+	let recessionsLoading = $state(false);
+	$effect(() => {
+		if (!recessionsOn || recessionPeriodsAll.length > 0 || recessionsLoading) return;
+		recessionsLoading = true;
+		getRecessionPeriods()
+			.then((periods) => { recessionPeriodsAll = periods; })
+			.catch(() => { recessionPeriodsAll = []; })
+			.finally(() => { recessionsLoading = false; });
+	});
+	const visibleRecessions = $derived(recessionsOn ? recessionPeriodsAll : []);
 
 	// Load main series data when id changes
 	$effect(() => {
@@ -306,6 +321,23 @@
 				Compare {compareIds.length > 0 ? `· ${compareIds.length}` : ''}
 			</button>
 
+			<button type="button" onclick={() => (recessionsOn = !recessionsOn)}
+				aria-pressed={recessionsOn}
+				class="inline-flex items-center gap-[7px] h-[28px] px-[10px] text-[12px] rounded-[5px] cursor-pointer select-none"
+				style:background={recessionsOn ? 'color-mix(in oklch, var(--ink-0) 7%, var(--bg))' : 'var(--bg)'}
+				style:color={recessionsOn ? 'var(--ink-0)' : 'var(--ink-2)'}
+				style:border="1px solid {recessionsOn ? 'var(--ink-2)' : 'var(--border)'}"
+				title="Shade NBER-dated U.S. recession periods behind the chart"
+			>
+				<span class="inline-block w-[14px] h-[9px] rounded-[2px]"
+					style:background={recessionsOn ? 'var(--ink-2)' : 'var(--border)'}
+					style:opacity={recessionsOn ? '0.45' : '0.8'}></span>
+				Recession bars
+				{#if recessionsLoading}
+					<span class="font-mono text-[10px]" style:color="var(--ink-3)">…</span>
+				{/if}
+			</button>
+
 			<div class="flex-1"></div>
 
 			<div class="font-mono text-[11px] flex gap-[14px]" style:color="var(--ink-3)">
@@ -341,7 +373,7 @@
 		<!-- chart card — keeps drag-to-zoom via ChartWrapper/ChartOverlay -->
 		<div class="rounded-[6px] px-2 pt-3 pb-1" style:background="var(--bg)" style:border="1px solid var(--border)">
 			{#if chartConfigs.length > 0}
-				<ChartWrapper configs={chartConfigs} height={420} />
+				<ChartWrapper configs={chartConfigs} height={420} recessionPeriods={visibleRecessions} />
 			{/if}
 			{#if compareIds.length > 0}
 				<div class="flex gap-[14px] flex-wrap px-2 py-3 border-t" style:border-color="var(--border-faint)">
