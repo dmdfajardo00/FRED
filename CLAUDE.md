@@ -144,7 +144,7 @@ Tokens live in `src/app.css`. The philosophy is editorial cartography.
 ## Running locally
 
 ```bash
-# Frontend on :5173 (proxies /api/* to production)
+# Frontend on :4817 (proxies /api/* to production)
 npm install
 npm run dev
 
@@ -152,6 +152,8 @@ npm run dev
 cd api && npm install
 DUCKDB_PATH=../data/fred/fred.duckdb npm run dev
 ```
+
+**Dev auth — why localhost is NOT in the prod allowlist.** The API's `hooks.server.ts` only trusts `dmdfajardo.pro` + `*.vercel.app` origins. Local dev reaches the API through the Vite proxy defined in `vite.config.ts`: the proxy runs server-side (Node, not browser), rewrites `Origin` to `https://dmdfajardo.pro`, and attaches `X-API-Key: $VITE_DEV_API_KEY` before forwarding. The key lives only in `.env` on your laptop — never in the browser bundle, never in git. A stranger who clones the repo and runs `npm run dev` without a `.env` gets 403s.
 
 `vite.config.ts` proxies `/api/*` to `https://db-dataviz.dmdfajardo.pro`, so the frontend works without a local API as long as the VPS is up. Spinning up the API locally requires the DuckDB file — 4 GB, not in git.
 

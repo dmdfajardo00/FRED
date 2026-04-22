@@ -9,9 +9,11 @@ import { timingSafeEqual } from 'node:crypto';
  * (e.g. https://dmdfajardo.pro.attacker.com must NOT match).
  */
 const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
-	// Local dev (any port on localhost / 127.0.0.1, http only)
-	/^http:\/\/localhost(:\d+)?$/,
-	/^http:\/\/127\.0\.0\.1(:\d+)?$/,
+	// NOTE: localhost intentionally NOT allowlisted. Dev machines reach the API
+	// via the Vite proxy (see vite.config.ts) which rewrites Origin to the
+	// prod apex and attaches a server-side X-API-Key. Direct browser requests
+	// from localhost would fall through to the key/403 branch.
+
 	// Apex domain, exact
 	/^https:\/\/dmdfajardo\.pro$/,
 	// Any subdomain of dmdfajardo.pro
