@@ -89,6 +89,7 @@
 	let svgEl: SVGSVGElement | null = $state(null);
 	let zoomTransform = $state({ k: 1, x: 0, y: 0 });
 	let zoomBehavior: ZoomBehavior<SVGSVGElement, unknown> | null = null;
+	let isPanning = $state(false);
 
 	let hover = $state<{ iso3: string; name: string; value: number | null; date: string | null; cx: number; cy: number } | null>(null);
 
@@ -109,16 +110,27 @@
 		} finally {
 			loading = false;
 		}
+	});
 
-		if (svgEl) {
-			const zb = zoom<SVGSVGElement, unknown>()
-				.scaleExtent([1, 8])
-				.on('zoom', (event) => {
-					zoomTransform = { k: event.transform.k, x: event.transform.x, y: event.transform.y };
-				});
-			zoomBehavior = zb;
-			select(svgEl).call(zb);
-		}
+	// Attach zoom/pan once the SVG exists (happens after `loading` flips).
+	$effect(() => {
+		if (!svgEl || zoomBehavior) return;
+		const zb = zoom<SVGSVGElement, unknown>()
+			.scaleExtent([1, 10])
+			.translateExtent([[-VW * 0.2, -VH * 0.2], [VW * 1.2, VH * 1.2]])
+			.filter((event) => {
+				// Allow wheel + all pointer drags including on country paths.
+				if (event.type === 'wheel') return !event.ctrlKey;
+				if (event.type === 'mousedown' || event.type === 'touchstart') return event.button === 0 || event.type === 'touchstart';
+				return !event.ctrlKey && !event.button;
+			})
+			.on('start', () => { isPanning = true; hover = null; })
+			.on('zoom', (event) => {
+				zoomTransform = { k: event.transform.k, x: event.transform.x, y: event.transform.y };
+			})
+			.on('end', () => { isPanning = false; });
+		zoomBehavior = zb;
+		select(svgEl).call(zb);
 	});
 
 	function resetZoom() {
@@ -235,7 +247,14 @@
 			Equal&nbsp;Earth · {zoomTransform.k.toFixed(1)}×
 		</div>
 
-		<svg bind:this={svgEl} viewBox="0 0 {VW} {VH}" width="100%" style:display="block" style:cursor="grab" aria-label="World choropleth">
+		<svg
+			bind:this={svgEl}
+			viewBox="0 0 {VW} {VH}"
+			width="100%"
+			class="map-svg"
+			class:panning={isPanning}
+			aria-label="World choropleth"
+		>
 			<defs>
 				<pattern id="nodata-hatch" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
 					<rect width="5" height="5" fill="var(--bg-soft)" />
@@ -245,34 +264,28 @@
 					<stop offset="0%" stop-color="var(--bg)" />
 					<stop offset="100%" stop-color="var(--bg-soft)" />
 				</radialGradient>
-				<filter id="map-shadow" x="-5%" y="-5%" width="110%" height="110%">
-					<feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="var(--ink-0)" flood-opacity="0.04" />
-				</filter>
 			</defs>
 
 			<g transform="translate({zoomTransform.x},{zoomTransform.y}) scale({zoomTransform.k})">
-				<!-- Ocean sphere -->
+				<!-- Ocean sphere + subtle graticule -->
 				<path d={spherePath} fill="url(#ocean-grad)" stroke="var(--border)" stroke-width={0.8 / zoomTransform.k} />
-				<!-- Graticule (lat/long grid) -->
-				<path d={graticulePath} fill="none" stroke="var(--border-faint)" stroke-width={0.4 / zoomTransform.k} opacity="0.6" />
+				<path d={graticulePath} fill="none" stroke="var(--border-faint)" stroke-width={0.4 / zoomTransform.k} opacity="0.55" />
 
-				<g filter="url(#map-shadow)">
+				<!-- Country fills -->
+				<g>
 					{#each rendered as r (r.iso3 ?? r.name)}
 						{@const v = r.datum?.value ?? null}
-						{@const hovered = hover?.iso3 === r.iso3}
-						{@const hasSeries = !!r.datum?.seriesId}
 						<path
 							class="country-path"
-							class:hovered
 							d={r.d}
 							fill={colorFor(v)}
-							stroke={hovered ? 'var(--ink-0)' : 'var(--border-faint)'}
-							stroke-width={hovered ? 1.3 / zoomTransform.k : 0.5 / zoomTransform.k}
-							style:cursor={hasSeries ? 'pointer' : 'default'}
-							role="button"
-							tabindex="0"
+							stroke="var(--border-faint)"
+							stroke-width={0.5 / zoomTransform.k}
+							vector-effect="non-scaling-stroke"
+							data-iso3={r.iso3 ?? ''}
 							aria-label={r.name}
 							onmouseenter={(e) => {
+								if (isPanning) return;
 								const [cx, cy] = pathGen.centroid(r.feature);
 								hover = {
 									iso3: r.iso3 ?? '',
@@ -284,7 +297,8 @@
 								};
 							}}
 							onmouseleave={() => (hover = null)}
-							onclick={() => {
+							onclick={(e) => {
+								e.stopPropagation();
 								if (r.iso3 && r.datum?.seriesId) onSelect(r.iso3, r.datum.seriesId);
 							}}
 							onkeydown={(e) => {
@@ -295,6 +309,22 @@
 						/>
 					{/each}
 				</g>
+
+				<!-- Hover/select highlight overlay — a single extra path above all countries -->
+				{#if hover}
+					{@const hoveredFeature = rendered.find((r) => r.iso3 === hover?.iso3)}
+					{#if hoveredFeature}
+						<path
+							d={hoveredFeature.d}
+							fill="none"
+							stroke="var(--ink-0)"
+							stroke-width={1.6 / zoomTransform.k}
+							stroke-linejoin="round"
+							class="hover-outline"
+							pointer-events="none"
+						/>
+					{/if}
+				{/if}
 			</g>
 		</svg>
 
@@ -336,16 +366,27 @@
 </div>
 
 <style>
-	.country-path {
-		transition:
-			fill 350ms cubic-bezier(0.16, 1, 0.3, 1),
-			stroke 180ms cubic-bezier(0.16, 1, 0.3, 1),
-			stroke-width 180ms cubic-bezier(0.16, 1, 0.3, 1);
+	.map-svg {
+		display: block;
+		cursor: grab;
+		touch-action: none;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+	.map-svg.panning { cursor: grabbing; }
+	.map-svg :global(.country-path) {
+		transition: fill 280ms cubic-bezier(0.16, 1, 0.3, 1);
+		cursor: pointer;
 		outline: none;
 	}
-	.country-path:focus-visible {
-		stroke: var(--ink-0);
-		stroke-width: 1.5;
+	.map-svg.panning :global(.country-path) { cursor: grabbing; }
+	.hover-outline {
+		animation: hover-in 160ms cubic-bezier(0.16, 1, 0.3, 1);
+		filter: drop-shadow(0 0 1px color-mix(in oklch, var(--ink-0) 35%, transparent));
+	}
+	@keyframes hover-in {
+		from { opacity: 0; }
+		to   { opacity: 1; }
 	}
 
 	.zoom-btn {

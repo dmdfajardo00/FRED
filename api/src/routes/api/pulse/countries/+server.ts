@@ -24,19 +24,50 @@ const ISO3_CODES = [
 	'VGB','VIR','VNM','VUT','WSM','XKX','YEM','ZAF','ZMB','ZWE'
 ];
 
-// ISO2 -> ISO3 for OECD-keyed series (CPALTT01{ISO2}M657N, LRHUTTTT{ISO2}M156S)
-// Covers all OECD members + G20 + Euro Area + OECD aggregate
+// ISO2 -> ISO3 — comprehensive map used by OECD-keyed and WB-population series.
+// WB POPTOT and OECD CPALTT01/LRHUTTTT all key by 2-letter code.
 const ISO2_TO_ISO3: Record<string, string> = {
-	US: 'USA', GB: 'GBR', JP: 'JPN', DE: 'DEU', FR: 'FRA', IT: 'ITA', CA: 'CAN',
-	AU: 'AUS', KR: 'KOR', MX: 'MEX', ES: 'ESP', NL: 'NLD', BE: 'BEL', CH: 'CHE',
-	SE: 'SWE', AT: 'AUT', DK: 'DNK', FI: 'FIN', NO: 'NOR', IE: 'IRL', PT: 'PRT',
-	GR: 'GRC', PL: 'POL', CZ: 'CZE', HU: 'HUN', SK: 'SVK', SI: 'SVN', LU: 'LUX',
-	EE: 'EST', LV: 'LVA', LT: 'LTU', IS: 'ISL', IL: 'ISR', TR: 'TUR', CL: 'CHL',
-	CO: 'COL', CR: 'CRI', NZ: 'NZL', CN: 'CHN', IN: 'IND', BR: 'BRA', ZA: 'ZAF',
-	RU: 'RUS', ID: 'IDN', SA: 'SAU', EZ: 'EUZ', OECD: 'OECD'
+	AF: 'AFG', AL: 'ALB', DZ: 'DZA', AS: 'ASM', AD: 'AND', AO: 'AGO', AG: 'ATG',
+	AR: 'ARG', AM: 'ARM', AW: 'ABW', AU: 'AUS', AT: 'AUT', AZ: 'AZE', BS: 'BHS',
+	BH: 'BHR', BD: 'BGD', BB: 'BRB', BY: 'BLR', BE: 'BEL', BZ: 'BLZ', BJ: 'BEN',
+	BM: 'BMU', BT: 'BTN', BO: 'BOL', BA: 'BIH', BW: 'BWA', BR: 'BRA', BN: 'BRN',
+	BG: 'BGR', BF: 'BFA', BI: 'BDI', CV: 'CPV', KH: 'KHM', CM: 'CMR', CA: 'CAN',
+	KY: 'CYM', CF: 'CAF', TD: 'TCD', CL: 'CHL', CN: 'CHN', CO: 'COL', KM: 'COM',
+	CG: 'COG', CD: 'COD', CR: 'CRI', CI: 'CIV', HR: 'HRV', CU: 'CUB', CW: 'CUW',
+	CY: 'CYP', CZ: 'CZE', DK: 'DNK', DJ: 'DJI', DM: 'DMA', DO: 'DOM', EC: 'ECU',
+	EG: 'EGY', SV: 'SLV', GQ: 'GNQ', ER: 'ERI', EE: 'EST', SZ: 'SWZ', ET: 'ETH',
+	FJ: 'FJI', FI: 'FIN', FR: 'FRA', PF: 'PYF', GA: 'GAB', GM: 'GMB', GE: 'GEO',
+	DE: 'DEU', GH: 'GHA', GR: 'GRC', GL: 'GRL', GD: 'GRD', GU: 'GUM', GT: 'GTM',
+	GN: 'GIN', GW: 'GNB', GY: 'GUY', HT: 'HTI', HN: 'HND', HK: 'HKG', HU: 'HUN',
+	IS: 'ISL', IN: 'IND', ID: 'IDN', IR: 'IRN', IQ: 'IRQ', IE: 'IRL', IM: 'IMN',
+	IL: 'ISR', IT: 'ITA', JM: 'JAM', JP: 'JPN', JO: 'JOR', KZ: 'KAZ', KE: 'KEN',
+	KI: 'KIR', KP: 'PRK', KR: 'KOR', XK: 'XKX', KW: 'KWT', KG: 'KGZ', LA: 'LAO',
+	LV: 'LVA', LB: 'LBN', LS: 'LSO', LR: 'LBR', LY: 'LBY', LI: 'LIE', LT: 'LTU',
+	LU: 'LUX', MO: 'MAC', MG: 'MDG', MW: 'MWI', MY: 'MYS', MV: 'MDV', ML: 'MLI',
+	MT: 'MLT', MH: 'MHL', MR: 'MRT', MU: 'MUS', MX: 'MEX', FM: 'FSM', MD: 'MDA',
+	MC: 'MCO', MN: 'MNG', ME: 'MNE', MA: 'MAR', MZ: 'MOZ', MM: 'MMR', NA: 'NAM',
+	NR: 'NRU', NP: 'NPL', NL: 'NLD', NC: 'NCL', NZ: 'NZL', NI: 'NIC', NE: 'NER',
+	NG: 'NGA', MK: 'MKD', MP: 'MNP', NO: 'NOR', OM: 'OMN', PK: 'PAK', PW: 'PLW',
+	PS: 'PSE', PA: 'PAN', PG: 'PNG', PY: 'PRY', PE: 'PER', PH: 'PHL', PL: 'POL',
+	PT: 'PRT', PR: 'PRI', QA: 'QAT', RO: 'ROU', RU: 'RUS', RW: 'RWA', WS: 'WSM',
+	SM: 'SMR', ST: 'STP', SA: 'SAU', SN: 'SEN', RS: 'SRB', SC: 'SYC', SL: 'SLE',
+	SG: 'SGP', SX: 'SXM', SK: 'SVK', SI: 'SVN', SB: 'SLB', SO: 'SOM', ZA: 'ZAF',
+	SS: 'SSD', ES: 'ESP', LK: 'LKA', SD: 'SDN', SR: 'SUR', SE: 'SWE', CH: 'CHE',
+	SY: 'SYR', TW: 'TWN', TJ: 'TJK', TZ: 'TZA', TH: 'THA', TL: 'TLS', TG: 'TGO',
+	TO: 'TON', TT: 'TTO', TN: 'TUN', TR: 'TUR', TM: 'TKM', UG: 'UGA', UA: 'UKR',
+	AE: 'ARE', GB: 'GBR', US: 'USA', UY: 'URY', UZ: 'UZB', VU: 'VUT', VE: 'VEN',
+	VN: 'VNM', VG: 'VGB', VI: 'VIR', YE: 'YEM', ZM: 'ZMB', ZW: 'ZWE',
+	// Aggregates FRED uses
+	EZ: 'EUZ', OECD: 'OECD'
 };
 
-const OECD_ISO2 = Object.keys(ISO2_TO_ISO3);
+const ALL_ISO2 = Object.keys(ISO2_TO_ISO3);
+// OECD-only subset for the monthly OECD metrics (CPI y/y, unemployment)
+const OECD_ISO2 = [
+	'US','GB','JP','DE','FR','IT','CA','AU','KR','MX','ES','NL','BE','CH','SE','AT',
+	'DK','FI','NO','IE','PT','GR','PL','CZ','HU','SK','SI','LU','EE','LV','LT','IS',
+	'IL','TR','CL','CO','CR','NZ','EZ','OECD'
+];
 
 type MetricConfig = {
 	label: string;
@@ -44,7 +75,8 @@ type MetricConfig = {
 	coverage: 'global' | 'oecd';
 	frequency: 'annual' | 'monthly';
 	buildId: (code: string) => string;
-	codes: string[]; // ISO3 (global) or ISO2 (oecd)
+	codes: string[];
+	codeType: 'iso2' | 'iso3';
 };
 
 const METRICS: Record<string, MetricConfig> = {
@@ -54,15 +86,17 @@ const METRICS: Record<string, MetricConfig> = {
 		coverage: 'global',
 		frequency: 'annual',
 		buildId: (iso3) => `NYGDPPCAPKD${iso3}`,
-		codes: ISO3_CODES
+		codes: ISO3_CODES,
+		codeType: 'iso3'
 	},
 	population: {
 		label: 'Population, total',
 		unit: 'people',
 		coverage: 'global',
 		frequency: 'annual',
-		buildId: (iso3) => `POPTOT${iso3}A647NWDB`,
-		codes: ISO3_CODES
+		buildId: (iso2) => `POPTOT${iso2}A647NWDB`,
+		codes: ALL_ISO2,
+		codeType: 'iso2'
 	},
 	cpi_yoy: {
 		label: 'CPI (% change from year ago)',
@@ -70,7 +104,8 @@ const METRICS: Record<string, MetricConfig> = {
 		coverage: 'oecd',
 		frequency: 'monthly',
 		buildId: (iso2) => `CPALTT01${iso2}M657N`,
-		codes: OECD_ISO2
+		codes: OECD_ISO2,
+		codeType: 'iso2'
 	},
 	unemployment: {
 		label: 'Harmonised Unemployment Rate',
@@ -78,7 +113,8 @@ const METRICS: Record<string, MetricConfig> = {
 		coverage: 'oecd',
 		frequency: 'monthly',
 		buildId: (iso2) => `LRHUTTTT${iso2}M156S`,
-		codes: OECD_ISO2
+		codes: OECD_ISO2,
+		codeType: 'iso2'
 	}
 };
 
@@ -139,7 +175,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const ids: string[] = [];
 	for (const code of m.codes) {
 		const sid = m.buildId(code);
-		const iso3 = m.coverage === 'oecd' ? ISO2_TO_ISO3[code] : code;
+		const iso3 = m.codeType === 'iso2' ? ISO2_TO_ISO3[code] : code;
 		if (!iso3) continue;
 		ids.push(sid);
 		idToCode.set(sid, iso3);

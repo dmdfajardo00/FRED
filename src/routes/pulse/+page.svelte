@@ -364,11 +364,6 @@
 						{logScale}
 						onSelect={(_iso3, seriesId) => goto(`/charts/${encodeURIComponent(seriesId)}`)}
 					/>
-
-					<div class="mt-3 px-3 text-[11px]" style:color="var(--ink-3)">
-						{countries.countries_with_data}/{countries.total_countries} countries have data ·
-						{countries.total_countries - countries.countries_with_data} missing shown as hatched
-					</div>
 				{/if}
 			</div>
 
