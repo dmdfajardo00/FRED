@@ -2,6 +2,7 @@
 	import { listReleases, getRelease, type ReleaseSummary, type SeriesSummary } from '$lib/api';
 	import { goto } from '$app/navigation';
 	import { formatValue } from '$lib/utils/format';
+	import RichNotes from '$lib/components/shared/RichNotes.svelte';
 
 	let releases = $state<ReleaseSummary[]>([]);
 	let loading = $state(true);
@@ -112,12 +113,14 @@
 					style:background="var(--bg)" style:border="1px solid var(--border)">
 					<div class="absolute top-0 left-0 h-full w-[3px]" style:background="var(--accent)"></div>
 					<div class="font-mono text-[10px] tracking-[0.08em] uppercase mb-2" style:color="var(--ink-3)">Release · #{selected.id}</div>
-					<h2 class="text-[22px] font-medium tracking-[-0.01em] m-0 mb-2" style:color="var(--ink-0)">{selected.name}</h2>
+					<h2 class="text-[22px] font-medium tracking-[-0.01em] m-0 mb-3" style:color="var(--ink-0)">{selected.name}</h2>
 					{#if selected.notes}
-						<div class="text-[13px] leading-[1.55] max-w-[720px]" style:color="var(--ink-2)">{selected.notes}</div>
+						<div class="max-w-[780px]">
+							<RichNotes text={selected.notes} collapsedMaxPx={170} />
+						</div>
 					{/if}
 					{#if selected.link}
-						<a href={selected.link} target="_blank" rel="noopener"
+						<a href={selected.link} target="_blank" rel="noopener noreferrer"
 							class="inline-flex items-center gap-1 mt-3 font-mono text-[11px] no-underline"
 							style:color="var(--accent)">
 							SOURCE ↗

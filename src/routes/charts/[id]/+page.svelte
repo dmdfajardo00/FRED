@@ -4,6 +4,7 @@
 	import { getSeriesMetadata, fetchObservations, listSeries, type SeriesMeta, type SeriesSummary } from '$lib/api';
 	import ChartWrapper from '$lib/components/charts/ChartWrapper.svelte';
 	import Sparkline from '$lib/components/gallery/Sparkline.svelte';
+	import RichNotes from '$lib/components/shared/RichNotes.svelte';
 	import type { ChartConfig } from '$lib/types/fred';
 	import { pinned, togglePin } from '$lib/stores/pinned';
 	import { formatValue, formatLongDate, formatFrequency } from '$lib/utils/format';
@@ -387,7 +388,9 @@
 					</div>
 				</div>
 				{#if seriesMeta.notes}
-					<div class="mt-6 text-[13px] leading-[1.6]" style:color="var(--ink-2)">{seriesMeta.notes}</div>
+					<div class="mt-6 max-w-[760px]">
+						<RichNotes text={seriesMeta.notes} collapsedMaxPx={200} />
+					</div>
 				{/if}
 			</div>
 
